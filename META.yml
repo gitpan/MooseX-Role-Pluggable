@@ -23,7 +23,10 @@ requires:
   Moose: 0
   Moose::Role: 0
   Moose::Util::TypeConstraints: 0
+  namespace::autoclean: 0
   perl: 5.10.0
 resources:
+  homepage: http://github.com/genehack/moosex-role-pluggable/tree
   license: http://dev.perl.org/licenses/
-version: 0.01
+  repository: git://github.com/genehack/moosex-role-pluggable.git
+version: 0.02

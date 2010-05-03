@@ -4,7 +4,7 @@ use Moose::Role;
 use Moose::Util::TypeConstraints;
 use 5.010;
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 has plugins => (
   isa => 'ArrayRef[Str]',
@@ -62,6 +62,18 @@ sub _build_plugin_list {
 
   return $plugin_list;
 };
+
+sub plugin_run_method {
+  my( $self , $method ) = @_;
+
+  my $return = [];
+  foreach my $plugin ( @{ $self->plugin_list }) {
+    if ( $plugin->can( $method ) ) {
+      push @$return , $plugin->$method();
+    }
+  }
+  return $return;
+}
 
 sub _map_plugins_to_libs {
   my( $self ) = @_;
