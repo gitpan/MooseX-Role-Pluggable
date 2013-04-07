@@ -1,10 +1,16 @@
 package MooseX::Role::Pluggable;
+{
+  $MooseX::Role::Pluggable::VERSION = '0.03';
+}
+BEGIN {
+  $MooseX::Role::Pluggable::AUTHORITY = 'cpan:GENEHACK';
+}
+# ABSTRACT: add plugins to your Moose classes
 use Class::MOP;
 use Moose::Role;
 use Moose::Util::TypeConstraints;
+use Tie::IxHash;
 use 5.010;
-
-our $VERSION = 0.02;
 
 has plugins => (
   isa => 'ArrayRef[Str]',
@@ -79,7 +85,7 @@ sub _map_plugins_to_libs {
   my( $self ) = @_;
   my $class = ref $self;
 
-  my %map;
+  tie my %map, "Tie::IxHash";
   foreach ( @{ $self->plugins } ) {
     $map{$_} = ( s/^\+// ) ? $_ : "${class}::Plugin::$_";
   }
@@ -91,9 +97,15 @@ no Moose::Role;
 
 __END__
 
+=pod
+
 =head1 NAME
 
 MooseX::Role::Pluggable - add plugins to your Moose classes
+
+=head1 VERSION
+
+version 0.03
 
 =head1 SYNOPSIS
 
@@ -141,6 +153,10 @@ one of those method right after you call 'new()'.
 Plugin classes should consume the 'MooseX::Role::Pluggable::Plugin' role; see
 the documentation for that module for more information.
 
+=head1 NAME
+
+MooseX::Role::Pluggable - add plugins to your Moose classes
+
 =head1 METHODS
 
 =head2 plugin_hash
@@ -149,7 +165,14 @@ Returns a hashref with a mapping of 'plugin_name' to the actual plugin object.
 
 =head2 plugin_list
 
-Returns an arrayref of loaded plugin objects.
+Returns an arrayref of loaded plugin objects. The arrayref will have the
+same order as the plugins array ref passed in during object creation.
+
+=head2 plugin_run_method( $method_name )
+
+Looks for a method named $method_name in each plugin in the plugin list. If a
+method of given name is found, it will be run. (N.b., this is essentially the
+C<foreach> loop from the L</SYNOPSIS>.)
 
 =head1 AUTHOR
 
@@ -166,5 +189,16 @@ Copyright 2010, John SJ Anderson
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+John SJ Anderson <genehack@genehack.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by John SJ Anderson.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut

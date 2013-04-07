@@ -1,18 +1,79 @@
-#!/usr/bin/env perl
-use inc::Module::Install;
 
-name 'MooseX-Role-Pluggable';
-all_from 'lib/MooseX/Role/Pluggable.pm';
-githubmeta;
+use strict;
+use warnings;
 
-requires 'Class::MOP';
-requires 'Moose';
-requires 'Moose::Role';
-requires 'Moose::Util::TypeConstraints';
-requires 'namespace::autoclean';
+use 5.010;
 
-test_requires 'Test::More';
+use ExtUtils::MakeMaker 6.30;
 
-auto_install;
 
-WriteAll;
+
+my %WriteMakefileArgs = (
+  "ABSTRACT" => "add plugins to your Moose classes",
+  "AUTHOR" => "John SJ Anderson <genehack\@genehack.org>",
+  "BUILD_REQUIRES" => {},
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
+  },
+  "DISTNAME" => "MooseX-Role-Pluggable",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "MooseX::Role::Pluggable",
+  "PREREQ_PM" => {
+    "Class::MOP" => 0,
+    "Moose" => "2.000",
+    "Moose::Role" => 0,
+    "Moose::Util::TypeConstraints" => 0,
+    "Tie::IxHash" => 0
+  },
+  "TEST_REQUIRES" => {
+    "File::Find" => 0,
+    "File::Temp" => 0,
+    "FindBin" => 0,
+    "Moose" => 0,
+    "MyApp::Plugin" => 0,
+    "Test::More" => 0,
+    "namespace::autoclean" => 0,
+    "strict" => 0,
+    "warnings" => 0
+  },
+  "VERSION" => "0.03",
+  "test" => {
+    "TESTS" => "t/*.t"
+  }
+);
+
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+  my $tr = delete $WriteMakefileArgs{TEST_REQUIRES};
+  my $br = $WriteMakefileArgs{BUILD_REQUIRES};
+  for my $mod ( keys %$tr ) {
+    if ( exists $br->{$mod} ) {
+      $br->{$mod} = $tr->{$mod} if $tr->{$mod} > $br->{$mod};
+    }
+    else {
+      $br->{$mod} = $tr->{$mod};
+    }
+  }
+}
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
+
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+
+
