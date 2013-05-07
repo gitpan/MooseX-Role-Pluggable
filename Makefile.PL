@@ -31,13 +31,12 @@ my %WriteMakefileArgs = (
     "File::Temp" => 0,
     "FindBin" => 0,
     "Moose" => 0,
-    "MyApp::Plugin" => 0,
     "Test::More" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.03",
+  "VERSION" => "0.04",
   "test" => {
     "TESTS" => "t/*.t"
   }

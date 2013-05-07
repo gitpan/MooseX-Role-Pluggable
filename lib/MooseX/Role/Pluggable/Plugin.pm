@@ -1,6 +1,6 @@
 package MooseX::Role::Pluggable::Plugin;
 {
-  $MooseX::Role::Pluggable::Plugin::VERSION = '0.03';
+  $MooseX::Role::Pluggable::Plugin::VERSION = '0.04';
 }
 BEGIN {
   $MooseX::Role::Pluggable::Plugin::AUTHORITY = 'cpan:GENEHACK';
@@ -39,7 +39,7 @@ MooseX::Role::Pluggable::Plugin - Role for plugins to consume
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 SYNOPSIS
 

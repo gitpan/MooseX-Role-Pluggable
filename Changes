@@ -1,5 +1,9 @@
 Revision history for MooseX-Role-Pluggable
 
+0.04      2013-05-07 15:07:22 America/Los_Angeles
+
+        Remove accidental MyApp::Plugin dep (RT#85111)
+
 0.03      2013-04-07 13:07:08 America/Los_Angeles
 
         Make plugin_list ordered (Jody Clements)
