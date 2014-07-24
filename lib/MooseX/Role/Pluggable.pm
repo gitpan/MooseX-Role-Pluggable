@@ -1,19 +1,14 @@
 package MooseX::Role::Pluggable;
-{
-  $MooseX::Role::Pluggable::VERSION = '0.04';
-}
-BEGIN {
-  $MooseX::Role::Pluggable::AUTHORITY = 'cpan:GENEHACK';
-}
+$MooseX::Role::Pluggable::VERSION = '0.05';
 # ABSTRACT: add plugins to your Moose classes
-use Class::MOP;
+use Class::Load 'load_class';
 use Moose::Role;
 use Moose::Util::TypeConstraints;
 use Tie::IxHash;
 use 5.010;
 
 has plugins => (
-  isa => 'ArrayRef[Str]',
+  isa => 'ArrayRef[Str|HashRef]' ,
   is  => 'rw' ,
 );
 
@@ -32,7 +27,9 @@ has plugin_hash => (
 sub _build_plugin_hash {
   my $self = shift;
 
-  return $self->plugin_list ? { map { $_->name => $_ } @{ $self->plugin_list } } : undef;
+  return $self->plugin_list
+    ? { map { $_->_mxrp_name => $_ } @{ $self->plugin_list } }
+    : undef;
 }
 
 has plugin_list => (
@@ -51,19 +48,42 @@ sub _build_plugin_list {
 
   my $plugin_name_map = $self->_map_plugins_to_libs();
 
-  foreach my $plugin_name ( keys %$plugin_name_map ) {
+  my @plugin_list = @{ $self->plugins };
+
+  foreach my $plugin ( @plugin_list ) {
+    my( $plugin_name , $plugin_args );
+
+    if ( ref $plugin eq 'HASH' ) { ( $plugin_name , $plugin_args ) = %$plugin }
+    else                         { $plugin_name = $plugin }
+
+    $plugin_name =~ s/^\+//;
+
     my $plugin_lib = $plugin_name_map->{$plugin_name};
 
     ### FIXME should have some Try::Tiny here, with a parameter to control
     ### what happens when a class doesn't load -- ignore, warn, die
-    Class::MOP::load_class( $plugin_lib );
+    load_class( $plugin_lib );
 
-    my $plugin = $plugin_lib->new({
-      name   => $plugin_name ,
-      parent => $self ,
-    });
+    my $args = {};
+    if ( $plugin_args ) {
+      $args = $plugin_args;
+      foreach ( qw/ _mxrp_name _mxrp_parent / ) {
+        die "'$_' is used internally and cannot be passed to constructor"
+          if exists $plugin_args->{$_};
+      }
+      $args->{_mxrp_name}   = $plugin_name;
+      $args->{_mxrp_parent} = $self;
+    }
+    else {
+      $args = {
+        _mxrp_name   => $plugin_name ,
+        _mxrp_parent => $self ,
+      };
+    }
 
-    push @{ $plugin_list } , $plugin;
+    my $loaded_plugin = $plugin_lib->new($args);
+
+    push @{ $plugin_list } , $loaded_plugin;
   }
 
   return $plugin_list;
@@ -86,9 +106,17 @@ sub _map_plugins_to_libs {
   my $class = ref $self;
 
   tie my %map, "Tie::IxHash";
-  foreach ( @{ $self->plugins } ) {
-    $map{$_} = ( s/^\+// ) ? $_ : "${class}::Plugin::$_";
+  my @plugins = @{ $self->plugins };
+
+  foreach ( @plugins ) {
+    my $name;
+    if    ( ref $_ eq 'HASH' ) { ($name) = keys %$_ }
+    elsif ( ref $_ )           { die "bad plugin list" }
+    else                       { $name = $_ }
+
+    $map{$name} = ( $name =~ s/^\+// ) ? $name : "${class}::Plugin::$name";
   }
+
   return \%map;
 }
 
@@ -99,13 +127,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 MooseX::Role::Pluggable - add plugins to your Moose classes
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 SYNOPSIS
 
@@ -116,6 +146,17 @@ version 0.04
     my $moose = MyMoose->new({
       plugins => [ 'Antlers' , 'Tail' , '+After::Market::GroundEffectsPackage' ] ,
       # other args here
+    });
+
+    or, if you need to pass arguments to a plugin module, you can do that by
+    using a hashref in the plugin list:
+
+    my $moose = MyMoose->new({
+      plugins  => [
+        { 'Antlers' => { long  => 1, } },
+        { 'Tail'    => { short => 1, } },
+        '+After::Market::GroundEffectsPackage' => {},
+      ]
     });
 
     foreach my $plugin ( @{ $moose->plugin_list } ) {
@@ -178,6 +219,10 @@ C<foreach> loop from the L</SYNOPSIS>.)
 
 John SJ Anderson, C<genehack@genehack.org>
 
+=head1 CONTRIBUTORS
+
+Sean Maguire C<smaguire@talktalkplc.com>
+
 =head1 SEE ALSO
 
 L<MooseX::Role::Pluggable::Plugin>, L<MooseX::Object::Pluggable>,
@@ -185,7 +230,7 @@ L<Object::Pluggable>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2010, John SJ Anderson
+Copyright 2014, John SJ Anderson
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
@@ -196,7 +241,7 @@ John SJ Anderson <genehack@genehack.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by John SJ Anderson.
+This software is copyright (c) 2014 by John SJ Anderson.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

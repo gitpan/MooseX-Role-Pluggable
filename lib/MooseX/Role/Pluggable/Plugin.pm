@@ -1,15 +1,10 @@
 package MooseX::Role::Pluggable::Plugin;
-{
-  $MooseX::Role::Pluggable::Plugin::VERSION = '0.04';
-}
-BEGIN {
-  $MooseX::Role::Pluggable::Plugin::AUTHORITY = 'cpan:GENEHACK';
-}
+$MooseX::Role::Pluggable::Plugin::VERSION = '0.05';
 # ABSTRACT: Role for plugins to consume
 use Moose::Role;
 use Moose::Util::TypeConstraints;
 
-has name => (
+has _mxrp_name => (
   isa => 'Str' ,
   is  => 'ro' ,
   required => 1 ,
@@ -20,7 +15,7 @@ subtype 'MooseXRolePluggable'
   => where { $_->does( 'MooseX::Role::Pluggable' ) }
   => message { 'Parent does not consume MooseX::Role::Pluggable!' };
 
-has parent => (
+has _mxrp_parent => (
   isa      => 'MooseXRolePluggable' ,
   is       => 'ro' ,
   required => 1 ,
@@ -33,13 +28,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 MooseX::Role::Pluggable::Plugin - Role for plugins to consume
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 SYNOPSIS
 
@@ -80,7 +77,7 @@ L<MooseX::Role::Pluggable>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2010, John SJ Anderson
+Copyright 2014, John SJ Anderson
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
@@ -91,7 +88,7 @@ John SJ Anderson <genehack@genehack.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by John SJ Anderson.
+This software is copyright (c) 2014 by John SJ Anderson.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
